@@ -29,12 +29,16 @@ start_link() ->
 get() ->
     gen_server:call(?SERVER, get).
 
-get_config_as_string(Name) ->
-    {ok, Value} = application:get_env(kiks, Name),
-    Value.
+get_config_as_string(Name, Default) ->
+    case application:get_env(kiks, Name) of
+	{ok, Value} ->
+	    Value;
+	_ ->
+	    Default
+    end.
 
-get_config_as_binary(Name) ->
-    String = get_config_as_string(Name),
+get_config_as_binary(Name, Default) ->
+    String = get_config_as_string(Name, Default),
     list_to_binary(String).
 
 %%-----------------------------------------------------------------------------
@@ -46,12 +50,12 @@ init(_) ->
     application:ensure_all_started(amqp_client),
 
     %% note - must be binary
-    Username = get_config_as_binary(rabbitmq_username),
-    Password = get_config_as_binary(rabbitmq_password),
+    Username = get_config_as_binary(rabbitmq_username, "guest"),
+    Password = get_config_as_binary(rabbitmq_password, "guest"),
 
     %% note - must be string
-    Hostname = get_config_as_string(rabbitmq_hostname),
-    Port = get_config_as_string(rabbitmq_port),
+    Hostname = get_config_as_string(rabbitmq_hostname, "localhost"),
+    Port = get_config_as_string(rabbitmq_port, "5672"),
 
     PrivDir = code:priv_dir(kiks),
     CaCert = filename:join(PrivDir, "cacert.pem"),
