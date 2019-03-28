@@ -1,12 +1,15 @@
+%% @doc Defines a consumer over amqp
+%% @end
 -module(kiks_consumer).
-
 -behaviour(gen_server).
 
 -include_lib("amqp_client/include/amqp_client.hrl").
 
+%% API
 -export([start_link/1,
 	 add_listener/2]).
 
+%% Behaviour callbacks
 -export([init/1,
 	 handle_call/3,
 	 handle_cast/2,
@@ -14,7 +17,9 @@
 	 terminate/2,
 	 code_change/3]).
 
--record(consumer, {channel, listeners = []}).
+%%------------------------------------------------------------------------------
+%% API
+%%------------------------------------------------------------------------------
 
 start_link(Info) ->
     gen_server:start_link(?MODULE, Info, []).
@@ -22,6 +27,13 @@ start_link(Info) ->
 add_listener(Pid, Listener) ->
     gen_server:cast(Pid, {add_listener, Listener}).
 
+%%-----------------------------------------------------------------------------
+%% Behaviour callbacks
+%%------------------------------------------------------------------------------
+
+-record(consumer, {channel, listeners = []}).
+
+%% @hidden
 init(#{exchange := Exchange, queue := Queue, routing_key := RoutingKey}) ->
     {ok, Channel} = kiks_amqp_connections:get(),
 
@@ -39,35 +51,39 @@ init(#{exchange := Exchange, queue := Queue, routing_key := RoutingKey}) ->
 
     {ok, #consumer{channel=Channel}}.
 
+%% @hidden
 handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.
 
+%% @hidden
 handle_cast({add_listener, Listener}, S=#consumer{listeners=Listeners}) ->
     {noreply, S#consumer{listeners=[Listener|Listeners]}};
-
 handle_cast(_What, State) ->
     {noreply, State}.
 
+%% @hidden
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
-
 handle_info({#'basic.deliver'{delivery_tag = Tag}, #amqp_msg{payload = Payload}}, State) ->
     notify(Payload, State),
     ack(Tag, State),
     {noreply, State};
 
+%% @hidden
 handle_info(_What, State) ->
     {noreply, State}.
 
+%% @hidden
 terminate(_Reason, _State) ->
     ok.
 
+%% @hidden
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
-%%%
-%%
-%%%
+%%-----------------------------------------------------------------------------
+%% Private
+%%------------------------------------------------------------------------------
 
 notify(Payload, #consumer{listeners=Listeners}) ->
     notify(Payload, Listeners);
