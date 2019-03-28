@@ -22,12 +22,8 @@ start_link(Info) ->
 add_listener(Pid, Listener) ->
     gen_server:cast(Pid, {add_listener, Listener}).
 
-init(Info) ->
+init(#{exchange := Exchange, queue := Queue, routing_key := RoutingKey}) ->
     {ok, Channel} = kiks_amqp_connections:get(),
-
-    Exchange = maps:get(exchange, Info),
-    Queue = maps:get(queue, Info),
-    RoutingKey = maps:get(routing_key, Info),
 
     amqp_common:ensure_exchange(Channel, Exchange),
     amqp_common:ensure_queue(Channel, Queue),

@@ -42,7 +42,7 @@ init(_) ->
     Hostname = os:getenv("RABBITMQ_HOSTNAME", "localhost"),
     Port = os:getenv("RABBITMQ_PORT", "5671"),
 
-    PrivDir = code:priv_dir("kiks"),
+    PrivDir = code:priv_dir(kiks),
     CaCert = filename:join(PrivDir, "cacert.pem"),
 
     init_response(amqp_connection:start(#amqp_params_network{
