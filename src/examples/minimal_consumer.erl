@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0,
+-export([start_link/2,
 	 process/2]).
 
 %% Behaviour callbacks
@@ -18,8 +18,8 @@
 %% API
 %%------------------------------------------------------------------------------
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start_link(Name, Threshold) ->
+    gen_server:start_link(?MODULE, [Name, Threshold], []).
 
 process(Pid, Payload) ->
     gen_server:call(Pid, {process, Payload}).
@@ -29,12 +29,13 @@ process(Pid, Payload) ->
 %%------------------------------------------------------------------------------
 
 %% @hidden
-init(_) ->
-    {ok, #{}}.
+init([Name, Threshold]) ->
+    {ok, #{name => Name, threshold => Threshold}}.
 
 %% @hidden
 handle_call({process, Payload}, _From, State) ->
-    Res = priv_process(Payload, rand:uniform()),
+    #{name := Name, threshold := Threshold} = State,
+    Res = priv_process(Name, Payload, Threshold, rand:uniform()),
     {reply, Res, State};
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -59,9 +60,9 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_process(Payload, F) when F < 0.5 ->
-    io:fwrite("Accepting [~p] ~p~n", [F, Payload]),
+priv_process(Name, Payload, Th, F) when F < Th ->
+    io:fwrite("[~p] ~p accepting ~p~n", [F, Name, Payload]),
     ok;
-priv_process(Payload, F) ->
-    io:fwrite("Rejecting [~p] ~p~n", [F, Payload]),
+priv_process(Name, Payload, Th, F) ->
+    io:fwrite("[~p] ~p rejecting ~p~n", [F, Name, Payload]),
     error.
