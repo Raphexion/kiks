@@ -3,17 +3,18 @@
 -define(SERVER, ?MODULE).
 
 -export([start_link/0,
-	 add_child/4]).
+	 add_child/5]).
 -export([init/1]).
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-add_child(Exchange, Queue, RoutingKey, Listener) ->
+add_child(Exchange, Queue, RoutingKey, Mod, Pid) ->
     Info = #{exchange => support:b(Exchange),
 	     queue => support:b(Queue),
 	     routing_key => support:b(RoutingKey),
-	     listener => Listener},
+	     mod => Mod,
+	     pid => Pid},
 
     supervisor:start_child(?MODULE, [Info]).
 
