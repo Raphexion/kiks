@@ -61,9 +61,7 @@ init(_) ->
 					   username = Username,
 					   password = Password,
 					   host = Hostname,
-					   port = list_to_integer(Port),
-					   ssl_options = [{verify, verify_peer},
-							  {cacertfile, CaCert}]
+					   port = list_to_integer(Port)
 					  })).
 
 handle_call(get, _From, S=#state{connection=Connection, channels=Channels}) ->
