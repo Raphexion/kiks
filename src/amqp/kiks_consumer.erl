@@ -14,18 +14,23 @@
 	 terminate/2,
 	 code_change/3]).
 
-start_link(Opts) ->
-    gen_server:start_link(?MODULE, Opts, []).
+-record(consumer, {channel, listeners = []}).
+
+start_link(Info) ->
+    gen_server:start_link(?MODULE, Info, []).
 
 add_listener(Pid, Listener) ->
     gen_server:cast(Pid, {add_listener, Listener}).
 
-init(Opts = #{channel := Channel,
-	      queue := Queue,
-	      exchange := Exchange,
-	      routing_key := RoutingKey}) ->
-    amqp_common:ensure_exchange(Opts),
-    amqp_common:ensure_queue(Opts),
+init(Info) ->
+    {ok, Channel} = kiks_amqp_connections:get(),
+
+    Exchange = maps:get(exchange, Info),
+    Queue = maps:get(queue, Info),
+    RoutingKey = maps:get(routing_key, Info),
+
+    amqp_common:ensure_exchange(Channel, Exchange),
+    amqp_common:ensure_queue(Channel, Queue),
 
     Binding = #'queue.bind'{queue       = Queue,
 			    exchange    = Exchange,
@@ -36,28 +41,26 @@ init(Opts = #{channel := Channel,
     #'basic.consume_ok'{consumer_tag = _Tag} =
 	amqp_channel:subscribe(Channel, Sub, self()),
 
-    {ok, []}.
+    {ok, #consumer{channel=Channel}}.
 
 handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.
 
-handle_cast({add_listener, Listener}, Listeners) ->
-    Listener ! {ok, added, Listener, self()},
-    {noreply, [Listener|Listeners]};
+handle_cast({add_listener, Listener}, S=#consumer{listeners=Listeners}) ->
+    {noreply, S#consumer{listeners=[Listener|Listeners]}};
 
-handle_cast(What, State) ->
-    io:fwrite("CAST: ~p~n", [What]),
+handle_cast(_What, State) ->
     {noreply, State}.
 
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
 
-handle_info({#'basic.deliver'{delivery_tag = _Tag}, #amqp_msg{payload = Payload}}, Listeners) ->
-    notify(Payload, Listeners),
-    {noreply, Listeners};
+handle_info({#'basic.deliver'{delivery_tag = Tag}, #amqp_msg{payload = Payload}}, State) ->
+    notify(Payload, State),
+    ack(Tag, State),
+    {noreply, State};
 
-handle_info(What, State) ->
-    io:fwrite("INFO ~p~n", [What]),
+handle_info(_What, State) ->
     {noreply, State}.
 
 terminate(_Reason, _State) ->
@@ -70,9 +73,18 @@ code_change(_OldVsn, State, _Extra) ->
 %%
 %%%
 
+notify(Payload, #consumer{listeners=Listeners}) ->
+    notify(Payload, Listeners);
+
 notify(_Payload, []) ->
     ok;
 
 notify(Payload, [Listener|Listeners]) ->
     Listener ! Payload,
     notify(Payload, Listeners).
+
+ack(Tag, #consumer{channel=Channel}) ->
+    ack(Tag, Channel);
+
+ack(Tag, Channel) ->
+    amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}).

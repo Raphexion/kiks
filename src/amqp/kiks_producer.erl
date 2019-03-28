@@ -14,15 +14,19 @@
 	 terminate/2,
 	 code_change/3]).
 
-start_link(Opts) ->
-    gen_server:start_link(?MODULE, Opts, []).
+start_link(Info) ->
+    gen_server:start_link(?MODULE, Info, []).
 
 send(Pid, Payload) ->
     gen_server:cast(Pid, {send, Payload}).
 
-init(Opts) ->
-    amqp_common:ensure_exchange(Opts),
-    {ok, Opts}.
+init(Info) ->
+    {ok, Channel} = kiks_amqp_connections:get(),
+
+    Exchange = maps:get(exchange, Info),
+    amqp_common:ensure_exchange(Channel, Exchange),
+
+    {ok, Info#{channel => Channel}}.
 
 handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.

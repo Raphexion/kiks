@@ -1,15 +1,16 @@
 {application, kiks,
- [{description, "An OTP library"},
-  {vsn, "0.1.0"},
+ [{description, "Small help library in Erlang / Communication"},
+  {vsn, "0.1.1"},
   {registered, []},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    amqp_client
    ]},
   {env,[]},
   {modules, []},
 
-  {maintainers, []},
+  {maintainers, ["Niklas Johansson (raphexion@gmail.com)"]},
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {links, [{"Github", "https://github.com/Raphexion/kiks"}]}
  ]}.

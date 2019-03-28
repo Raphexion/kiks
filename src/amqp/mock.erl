@@ -10,6 +10,8 @@ setup_channel() ->
     Username = list_to_binary(os:getenv("RABBITMQ_USERNAME")),
     Password = list_to_binary(os:getenv("RABBITMQ_PASSWORD")),
 
+    io:fwrite("Username ~p~n", [Username]),
+    io:fwrite("Password ~p~n", [Password]),
 
     {ok, Connection} =
 	amqp_connection:start(#amqp_params_network{
