@@ -27,14 +27,13 @@ start_link(Info) ->
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
--record(consumer, {channel, listeners = []}).
-
 %% @hidden
 init(Info) ->
     #{exchange := Exchange,
       queue := Queue,
       routing_key := RoutingKey,
-      listener := Listener} = Info,
+      mod := Mod,
+      pid := Pid} = Info,
 
     {ok, Channel} = kiks_amqp_connections:get(),
 
@@ -50,15 +49,13 @@ init(Info) ->
     #'basic.consume_ok'{consumer_tag = _Tag} =
 	amqp_channel:subscribe(Channel, Sub, self()),
 
-    {ok, #consumer{channel=Channel, listeners=[Listener]}}.
+    {ok, Info#{channel => Channel}}.
 
 %% @hidden
 handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.
 
 %% @hidden
-handle_cast({add_listener, Listener}, S=#consumer{listeners=Listeners}) ->
-    {noreply, S#consumer{listeners=[Listener|Listeners]}};
 handle_cast(_What, State) ->
     {noreply, State}.
 
@@ -66,7 +63,8 @@ handle_cast(_What, State) ->
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
 handle_info({#'basic.deliver'{delivery_tag = Tag}, #amqp_msg{payload = Payload}}, State) ->
-    case notify(Payload, State) of
+    #{mod := Mod, pid := Pid} = State,
+    case Mod:process(Pid, Payload) of
 	ok ->
 	    ack(Tag, State);
 	_ ->
@@ -90,23 +88,13 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-notify(Payload, #consumer{listeners=Listeners}) ->
-    notify(Payload, Listeners);
-
-notify(_Payload, []) ->
-    ok;
-
-notify(Payload, [Listener|Listeners]) ->
-    Listener ! Payload,
-    notify(Payload, Listeners).
-
-ack(Tag, #consumer{channel=Channel}) ->
+ack(Tag, #{channel := Channel}) ->
     ack(Tag, Channel);
 
 ack(Tag, Channel) ->
     amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}).
 
-nack(Tag, #consumer{channel=Channel}) ->
+nack(Tag, #{channel := Channel}) ->
     nack(Tag, Channel);
 
 nack(Tag, Channel) ->
