@@ -2,6 +2,7 @@
  [{description, "Small help library in Erlang / Communication"},
   {vsn, "0.1.1"},
   {registered, []},
+  {mod, { kiks_app, []}},
   {applications,
    [kernel,
     stdlib,
