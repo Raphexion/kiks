@@ -19,3 +19,4 @@ log
 logs
 rebar3.crashdump
 rel/example_project
+*~
