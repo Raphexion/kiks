@@ -26,7 +26,7 @@ start_link(Info) ->
     gen_server:start_link(?MODULE, Info, []).
 
 send(Pid, Payload) ->
-    gen_server:cast(Pid, {send, Payload}).
+    gen_server:cast(Pid, {send, support:b(Payload)}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
