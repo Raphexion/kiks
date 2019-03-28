@@ -30,12 +30,18 @@ get() ->
     gen_server:call(?SERVER, get).
 
 get_config_as_string(Name, Default) ->
+    Env = atom_to_list(Name),
+    get_config_as_string(Name, Default, os:getenv(Env)).
+
+get_config_as_string(Name, Default, false) ->
     case application:get_env(kiks, Name) of
 	{ok, Value} ->
 	    Value;
 	_ ->
 	    Default
-    end.
+    end;
+get_config_as_string(_Name, _Default, Value) ->
+    Value.
 
 get_config_as_binary(Name, Default) ->
     String = get_config_as_string(Name, Default),
