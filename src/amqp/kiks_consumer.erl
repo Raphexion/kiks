@@ -66,8 +66,12 @@ handle_cast(_What, State) ->
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
 handle_info({#'basic.deliver'{delivery_tag = Tag}, #amqp_msg{payload = Payload}}, State) ->
-    notify(Payload, State),
-    ack(Tag, State),
+    case notify(Payload, State) of
+	ok ->
+	    ack(Tag, State);
+	_ ->
+	    nack(Tag, State)
+    end,
     {noreply, State};
 
 %% @hidden
@@ -101,3 +105,9 @@ ack(Tag, #consumer{channel=Channel}) ->
 
 ack(Tag, Channel) ->
     amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}).
+
+nack(Tag, #consumer{channel=Channel}) ->
+    nack(Tag, Channel);
+
+nack(Tag, Channel) ->
+    amqp_channel:cast(Channel, #'basic.nack'{delivery_tag = Tag}).
