@@ -4,14 +4,13 @@
 
 -export([start_link/0]).
 -export([init/1,
-	 add_child/3]).
+	 add_child/2]).
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-add_child(Exchange, Queue, RoutingKey) ->
+add_child(Exchange, RoutingKey) ->
     add_child(#{exchange => support:b(Exchange),
-		queue => support:b(Queue),
 		routing_key => support:b(RoutingKey)}).
 
 add_child(Opts) ->
