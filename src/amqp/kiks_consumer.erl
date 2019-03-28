@@ -6,8 +6,7 @@
 -include_lib("amqp_client/include/amqp_client.hrl").
 
 %% API
--export([start_link/1,
-	 add_listener/2]).
+-export([start_link/1]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -24,9 +23,6 @@
 start_link(Info) ->
     gen_server:start_link(?MODULE, Info, []).
 
-add_listener(Pid, Listener) ->
-    gen_server:cast(Pid, {add_listener, Listener}).
-
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
@@ -34,7 +30,12 @@ add_listener(Pid, Listener) ->
 -record(consumer, {channel, listeners = []}).
 
 %% @hidden
-init(#{exchange := Exchange, queue := Queue, routing_key := RoutingKey}) ->
+init(Info) ->
+    #{exchange := Exchange,
+      queue := Queue,
+      routing_key := RoutingKey,
+      listener := Listener} = Info,
+
     {ok, Channel} = kiks_amqp_connections:get(),
 
     amqp_common:ensure_exchange(Channel, Exchange),
@@ -49,7 +50,7 @@ init(#{exchange := Exchange, queue := Queue, routing_key := RoutingKey}) ->
     #'basic.consume_ok'{consumer_tag = _Tag} =
 	amqp_channel:subscribe(Channel, Sub, self()),
 
-    {ok, #consumer{channel=Channel}}.
+    {ok, #consumer{channel=Channel, listeners=[Listener]}}.
 
 %% @hidden
 handle_call(What, _From, State) ->
