@@ -18,70 +18,61 @@ start_link(Opts) ->
     gen_server:start_link(?MODULE, Opts, []).
 
 add_listener(Pid, Listener) ->
-    gen_server:cast(Pid, {add_listener, Pid}).
+    gen_server:cast(Pid, {add_listener, Listener}).
 
 init(Opts = #{channel := Channel,
 	      queue := Queue,
-	      exchange := Exchange}) ->
-    ensure_exchange(Opts),
-    ensure_queue(Opts),
+	      exchange := Exchange,
+	      routing_key := RoutingKey}) ->
+    amqp_common:ensure_exchange(Opts),
+    amqp_common:ensure_queue(Opts),
+
+    Binding = #'queue.bind'{queue       = Queue,
+			    exchange    = Exchange,
+			    routing_key = RoutingKey},
+    #'queue.bind_ok'{} = amqp_channel:call(Channel, Binding),
 
     Sub = #'basic.consume'{queue = Queue},
-    #'basic.consume_ok'{consumer_tag = Tag} =
+    #'basic.consume_ok'{consumer_tag = _Tag} =
 	amqp_channel:subscribe(Channel, Sub, self()),
 
-    io:fwrite("TAG: ~p~n", [Tag]),
     {ok, []}.
 
 handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.
 
-handle_cast({add_listener, Listener}, State) ->
-    Listener ! {ok, added, self()},
-    {noreply, State};
+handle_cast({add_listener, Listener}, Listeners) ->
+    Listener ! {ok, added, Listener, self()},
+    {noreply, [Listener|Listeners]};
 
-handle_cast(_What, State) ->
+handle_cast(What, State) ->
+    io:fwrite("CAST: ~p~n", [What]),
     {noreply, State}.
 
+handle_info(#'basic.consume_ok'{}, State) ->
+    {noreply, State};
 
-%% loop(Channel) ->
-%%     receive
-%%         %% This is the first message received
-%%         #'basic.consume_ok'{} ->
-%%             loop(Channel);
-%%
-%%         %% This is received when the subscription is cancelled
-%%         #'basic.cancel_ok'{} ->
-%%             ok;
-%%
-%%         %% A delivery
-%%         {#'basic.deliver'{delivery_tag = Tag}, Content} ->
-%%             %% Do something with the message payload
-%%             %% (some work here)
-%%
-%%             %% Ack the message
-%%             amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}),
-%%
-%%             %% Loop
-%%             loop(Channel)
-%%     end.
-%%
+handle_info({#'basic.deliver'{delivery_tag = _Tag}, #amqp_msg{payload = Payload}}, Listeners) ->
+    notify(Payload, Listeners),
+    {noreply, Listeners};
 
 handle_info(What, State) ->
     io:fwrite("INFO ~p~n", [What]),
     {noreply, State}.
 
-terminate(Reason, State) ->
+terminate(_Reason, _State) ->
     ok.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
+%%%
+%%
+%%%
 
-ensure_exchange(#{channel := Channel, exchange := Exchange}) ->
-    Declare = #'exchange.declare'{exchange = Exchange},
-    #'exchange.declare_ok'{} = amqp_channel:call(Channel, Declare).
+notify(_Payload, []) ->
+    ok;
 
-ensure_queue(#{channel := Channel, queue := Queue}) ->
-    Declare = #'queue.declare'{queue = Queue},
-    #'queue.declare_ok'{} = amqp_channel:call(Channel, Declare).
+notify(Payload, [Listener|Listeners]) ->
+    Listener ! Payload,
+    notify(Payload, Listeners).
