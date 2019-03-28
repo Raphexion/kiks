@@ -63,6 +63,6 @@ code_change(_OldVsn, State, _Extra) ->
 priv_process(Name, Payload, Th, F) when F < Th ->
     io:fwrite("[~p] ~p accepting ~p~n", [F, Name, Payload]),
     ok;
-priv_process(Name, Payload, Th, F) ->
+priv_process(Name, Payload, _Th, F) ->
     io:fwrite("[~p] ~p rejecting ~p~n", [F, Name, Payload]),
     error.
