@@ -31,9 +31,7 @@ start_link(Info) ->
 init(Info) ->
     #{exchange := Exchange,
       queue := Queue,
-      routing_key := RoutingKey,
-      mod := Mod,
-      pid := Pid} = Info,
+      routing_key := RoutingKey} = Info,
 
     {ok, Channel} = kiks_amqp_connections:get(),
 
