@@ -8,7 +8,7 @@
 
 %% API
 -export([start_link/1,
-	 send/2]).
+	 send/3]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -25,8 +25,8 @@
 start_link(Info) ->
     gen_server:start_link(?MODULE, Info, []).
 
-send(Pid, Payload) ->
-    gen_server:cast(Pid, {send, support:b(Payload)}).
+send(Pid, Payload, Topic) ->
+    gen_server:cast(Pid, {send, support:b(Payload), support:b(Topic)}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -44,12 +44,11 @@ handle_call(What, _From, State) ->
     {reply, {ok, What}, State}.
 
 %% @hidden
-handle_cast({send, Payload}, State) ->
+handle_cast({send, Payload, Topic}, State) ->
     #{channel := Channel,
-      exchange := Exchange,
-      routing_key := RoutingKey} = State,
+      exchange := Exchange} = State,
 
-    Publish = #'basic.publish'{exchange = Exchange, routing_key = RoutingKey},
+    Publish = #'basic.publish'{exchange = Exchange, routing_key = Topic},
     amqp_channel:cast(Channel, Publish, #amqp_msg{payload = Payload}),
 
     {noreply, State};
