@@ -6,7 +6,9 @@
 	 ensure_queue/2]).
 
 ensure_exchange(Channel, Exchange) ->
-    Declare = #'exchange.declare'{exchange = support:b(Exchange), durable = true},
+    Declare = #'exchange.declare'{exchange = support:b(Exchange),
+				  type = <<"topic">>,
+				  durable = true},
     #'exchange.declare_ok'{} = amqp_channel:call(Channel, Declare).
 
 ensure_queue(Channel, Queue) ->
