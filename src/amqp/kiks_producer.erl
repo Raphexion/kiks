@@ -33,10 +33,8 @@ send(Pid, Payload) ->
 %%------------------------------------------------------------------------------
 
 %% @hidden
-init(Info) ->
+init(Info=#{exchange := Exchange}) ->
     {ok, Channel} = kiks_amqp_connections:get(),
-
-    Exchange = maps:get(exchange, Info),
     amqp_common:ensure_exchange(Channel, Exchange),
 
     {ok, Info#{channel => Channel}}.
@@ -47,9 +45,9 @@ handle_call(What, _From, State) ->
 
 %% @hidden
 handle_cast({send, Payload}, State) ->
-    Channel = maps:get(channel, State),
-    Exchange = maps:get(exchange, State),
-    RoutingKey = maps:get(routing_key, State),
+    #{channel := Channel,
+      exchange := Exchange,
+      routing_key := RoutingKey} = State,
 
     Publish = #'basic.publish'{exchange = Exchange, routing_key = RoutingKey},
     amqp_channel:cast(Channel, Publish, #amqp_msg{payload = Payload}),
