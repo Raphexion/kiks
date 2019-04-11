@@ -1,4 +1,4 @@
--module(amqp_common).
+-module(kiks_common).
 
 -include_lib("amqp_client/include/amqp_client.hrl").
 

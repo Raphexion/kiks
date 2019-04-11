@@ -35,8 +35,8 @@ init(Info) ->
 
     {ok, Channel} = kiks_amqp_connections:get(),
 
-    amqp_common:ensure_exchange(Channel, Exchange),
-    amqp_common:ensure_queue(Channel, Queue),
+    kiks_common:ensure_exchange(Channel, Exchange),
+    kiks_common:ensure_queue(Channel, Queue),
 
     Binding = #'queue.bind'{queue       = Queue,
 			    exchange    = Exchange,
