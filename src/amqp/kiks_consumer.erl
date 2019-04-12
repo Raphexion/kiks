@@ -60,7 +60,9 @@ handle_cast(_What, State) ->
 %% @hidden
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
-handle_info({#'basic.deliver'{delivery_tag = Tag}, #amqp_msg{payload = Payload}}, State) ->
+handle_info({Deliver=#'basic.deliver'{}, Data}, State) ->
+    #'basic.deliver'{delivery_tag = Tag, routing_key = _Key} = Deliver,
+    #amqp_msg{payload = Payload} = Data,
     #{mod := Mod, pid := Pid} = State,
     case Mod:process(Pid, Payload) of
 	ok ->
