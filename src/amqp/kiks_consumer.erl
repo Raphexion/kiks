@@ -61,10 +61,10 @@ handle_cast(_What, State) ->
 handle_info(#'basic.consume_ok'{}, State) ->
     {noreply, State};
 handle_info({Deliver=#'basic.deliver'{}, Data}, State) ->
-    #'basic.deliver'{delivery_tag = Tag, routing_key = _Key} = Deliver,
+    #'basic.deliver'{delivery_tag = Tag, routing_key = Key} = Deliver,
     #amqp_msg{payload = Payload} = Data,
     #{mod := Mod, pid := Pid} = State,
-    case Mod:process(Pid, Payload) of
+    case Mod:process(Pid, Payload, Key) of
 	ok ->
 	    ack(Tag, State);
 	_ ->
