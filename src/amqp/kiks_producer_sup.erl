@@ -10,7 +10,8 @@ start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 add_child(Exchange) ->
-    add_child(#{exchange => support:b(Exchange)}).
+    Opts = #{exchange => support:b(Exchange)},
+    supervisor:start_child(?MODULE, [Opts]).
 
 init(_) ->
     SupFlags = #{strategy => simple_one_for_one,
