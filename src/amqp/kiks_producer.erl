@@ -41,6 +41,7 @@ init(Info=#{exchange := Exchange}) ->
 
 %% @hidden
 handle_call(What, _From, State) ->
+    lager:warning("~p doesn't implement ~p", [?MODULE, What]),
     {reply, {ok, What}, State}.
 
 %% @hidden
@@ -52,17 +53,18 @@ handle_cast({send, Payload, Topic}, State) ->
     amqp_channel:cast(Channel, Publish, #amqp_msg{payload = Payload}),
 
     {noreply, State};
-handle_cast(_What, State) ->
+handle_cast(What, State) ->
+    lager:warning("~p doesn't implement ~p", [?MODULE, What]),
     {noreply, State}.
 
 %% @hidden
 handle_info(What, State) ->
-    io:fwrite("INFO ~p~n", [What]),
+    lager:warning("~p doesn't implement ~p", [?MODULE, What]),
     {noreply, State}.
 
 %% @hidden
 terminate(Reason, _State) ->
-    io:fwrite("Terminaate ~p~n", [Reason]),
+    lager:debug("~p terminated with ~p", [?MODULE, Reason]),
     ok.
 
 %% @hidden
