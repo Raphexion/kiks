@@ -24,6 +24,9 @@ application:ensure_all_started(kiks).
 {ok, C1} = kiks_consumer_sup:add_child("e", "q", <<"a.b.*">>, minimal_consumer, Pid1).
 {ok, C2} = kiks_consumer_sup:add_child("e", "q", <<"a.b.*">>, minimal_consumer, Pid2).
 
+{ok, Q1} = kiks_queue:start_link("e", "", "#").
+{ok, Q2} = kiks_queue:start_link("e", "", "#").
+
 {ok, P1} = kiks_producer_sup:add_child("e").
 
 [kiks_producer:send(P1, <<X>>, <<"a.b.c">>) || X <- lists:seq(1, 100)].
