@@ -1,4 +1,7 @@
 # kiks
+
+[![Build Status](https://travis-ci.org/Raphexion/kiks.svg?branch=master)](https://travis-ci.org/Raphexion/kiks)
+
 Small help library in Erlang / RabbitMQ
 
 ## Prerequisites
