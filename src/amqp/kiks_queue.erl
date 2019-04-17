@@ -6,7 +6,8 @@
 -export([start_link/3,
 	 process/3,
 	 empty/1,
-	 pop/1]).
+	 pop/1,
+	 pop/3]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -31,6 +32,17 @@ empty(Queue) ->
 
 pop(Queue) ->
     gen_server:call(Queue, pop).
+
+pop(_Queue, 0, _Timeout) ->
+    empty;
+pop(Queue, Tries, Timeout) ->
+    case pop(Queue) of
+	empty ->
+	    timer:sleep(Timeout),
+	    pop(Queue, Tries - 1, Timeout);
+	Item ->
+	    Item
+    end.
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
