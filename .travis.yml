@@ -14,3 +14,4 @@ before_install:
 script:
   - rebar3 compile
   - rebar3 eunit
+  - rebar3 proper
