@@ -8,6 +8,9 @@ otp_release:
   - 20.2
   - 19.3
 
+before_install:
+  - docker run -d --rm -p 5672:5672 rabbitmq:3.7
+
 script:
   - rebar3 compile
   - rebar3 eunit
