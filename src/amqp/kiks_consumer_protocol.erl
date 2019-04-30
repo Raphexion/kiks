@@ -1,3 +1,3 @@
 -module(kiks_consumer_protocol).
 
--callback process(pid(), binary(), binary()) -> 'ok' | 'error'.
+-callback process(atom(), pid(), binary(), binary()) -> 'ok' | 'error'.

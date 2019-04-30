@@ -3,14 +3,19 @@
 -define(SERVER, ?MODULE).
 
 -export([start_link/0,
-	 add_child/5]).
+	 add_child/5,
+	 add_child/6]).
 -export([init/1]).
 
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 add_child(Exchange, Queue, RoutingKey, Mod, Pid) ->
-    Info = #{exchange => support:b(Exchange),
+    add_child(no_tag, Exchange, Queue, RoutingKey, Mod, Pid).
+
+add_child(Tag, Exchange, Queue, RoutingKey, Mod, Pid) ->
+    Info = #{tag => Tag,
+	     exchange => support:b(Exchange),
 	     queue => support:b(Queue),
 	     routing_key => support:b(RoutingKey),
 	     mod => Mod,

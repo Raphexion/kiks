@@ -4,7 +4,7 @@
 
 %% API
 -export([start_link/3,
-	 process/3,
+	 process/4,
 	 empty/1,
 	 pop/1,
 	 pop/3]).
@@ -24,7 +24,7 @@
 start_link(Exchange, Queue, RoutingKey) ->
     gen_server:start_link(?MODULE, [Exchange, Queue, RoutingKey], []).
 
-process(Queue, Payload, _RoutingKey) ->
+process(_Tag, Queue, Payload, _RoutingKey) ->
     gen_server:call(Queue, {process, Payload}).
 
 empty(Queue) ->

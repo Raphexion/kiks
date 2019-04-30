@@ -63,8 +63,8 @@ handle_info(#'basic.consume_ok'{}, State) ->
 handle_info({Deliver=#'basic.deliver'{}, Data}, State) ->
     #'basic.deliver'{delivery_tag = Tag, routing_key = Key} = Deliver,
     #amqp_msg{payload = Payload} = Data,
-    #{mod := Mod, pid := Pid} = State,
-    case Mod:process(Pid, Payload, Key) of
+    #{tag := T, mod := Mod, pid := Pid} = State,
+    case Mod:process(T, Pid, Payload, Key) of
 	ok ->
 	    ack(Tag, State);
 	_ ->

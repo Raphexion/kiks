@@ -4,7 +4,7 @@
 
 %% API
 -export([start_link/2,
-	 process/3]).
+	 process/4]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -21,8 +21,8 @@
 start_link(Name, Threshold) ->
     gen_server:start_link(?MODULE, [Name, Threshold], []).
 
-process(Pid, Payload, RoutingKey) ->
-    gen_server:call(Pid, {process, Payload, RoutingKey}).
+process(Tag, Pid, Payload, RoutingKey) ->
+    gen_server:call(Pid, {process, Tag, Payload, RoutingKey}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -33,7 +33,7 @@ init([Name, Threshold]) ->
     {ok, #{name => Name, threshold => Threshold}}.
 
 %% @hidden
-handle_call({process, Payload, RoutingKey}, _From, State) ->
+handle_call({process, _Tag, Payload, RoutingKey}, _From, State) ->
     #{name := Name, threshold := Threshold} = State,
     Res = priv_process(Name, Payload, RoutingKey, Threshold, rand:uniform()),
     {reply, Res, State};
