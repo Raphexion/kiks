@@ -4,7 +4,10 @@
 	 get_config_as_string/2,
 	 get_config_as_binary/2]).
 
-b(Variable) when is_binary(Variable) ->                                                                                                              Variable;                                                                                                                                    b(Variable) when is_list(Variable) ->                                                                                                                list_to_binary(Variable).
+b(Variable) when is_binary(Variable) ->
+    Variable;
+b(Variable) when is_list(Variable) ->
+    list_to_binary(Variable).
 
 get_config_as_string(Name, Default) ->
     Env = atom_to_list(Name),
