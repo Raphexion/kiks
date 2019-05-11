@@ -1,6 +1,6 @@
 {application, kiks,
  [{description, "Small help library in Erlang / Communication"},
-  {vsn, "0.4.0"},
+  {vsn, "0.4.2"},
   {registered, []},
   {mod, { kiks_app, []}},
   {applications,
