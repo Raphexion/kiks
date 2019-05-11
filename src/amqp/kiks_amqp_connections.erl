@@ -10,7 +10,8 @@
 
 %% API
 -export([start_link/0,
-	 get/0]).
+	 get/0,
+	 with_channel/1]).
 
 %% Behaviour callbacks
 -export([init/1,
@@ -20,7 +21,7 @@
 	 terminate/2,
 	 code_change/3]).
 
--record(state, {connection, channels=[]}).
+-record(state, {connection, with_channel, channels=[]}).
 
 %%------------------------------------------------------------------------------
 %% API
@@ -31,6 +32,9 @@ start_link() ->
 
 get() ->
     gen_server:call(?SERVER, get).
+
+with_channel(Fun) ->
+    gen_server:call(?SERVER, {with_channel, Fun}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -61,7 +65,18 @@ init(_) ->
 %% @hidden
 handle_call(get, _From, S=#state{connection=Connection, channels=Channels}) ->
     {ok, Channel} = amqp_connection:open_channel(Connection),
-    {reply, {ok, Channel}, S#state{channels=[Channel|Channels]}}.
+    {reply, {ok, Channel}, S#state{channels=[Channel|Channels]}};
+
+handle_call({with_channel, Fun}, _From, S=#state{with_channel=Channel}) ->
+    Reply = try Fun(Channel) of
+		Result ->
+		    {ok, Result}
+	    catch
+		A:B ->
+		    {error, A, B}
+	    end,
+    {reply, Reply, S}.
+
 handle_cast(_What, State) ->
     {noreply, State}.
 
@@ -84,7 +99,10 @@ code_change(_, _, State) ->
 %%------------------------------------------------------------------------------
 
 init_response({ok, Connection}) ->
-    {ok, #state{connection=Connection}};
+    {ok, Channel} = amqp_connection:open_channel(Connection),
+    {ok, #state{with_channel=Channel,
+		connection=Connection}};
+
 init_response(Error) ->
     {stop, Error}.
 
