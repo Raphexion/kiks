@@ -64,7 +64,7 @@ handle_info({Deliver=#'basic.deliver'{}, Data}, State) ->
     #'basic.deliver'{delivery_tag = Tag, routing_key = Key} = Deliver,
     #amqp_msg{payload = Payload} = Data,
     #{tag := T, mod := Mod, pid := Pid} = State,
-    case Mod:process(T, Pid, Payload, Key) of
+    case process(Mod, T, Pid, Payload, Key) of
 	ok ->
 	    ack(Tag, State);
 	_ ->
@@ -99,3 +99,17 @@ nack(Tag, #{channel := Channel}) ->
 
 nack(Tag, Channel) ->
     amqp_channel:cast(Channel, #'basic.nack'{delivery_tag = Tag}).
+
+process(send, T, Pid, Payload, Key) ->
+    Pid ! {self(), T, Pid, Payload, Key},
+    receive
+	{Pid, ok} ->
+	    ok;
+	_ ->
+	    error
+    end;
+process(Mod, T, Pid, Payload, Key) ->
+    case Mod:process(T, Pid, Payload, Key) of
+	ok -> ok;
+	_ -> error
+    end.
