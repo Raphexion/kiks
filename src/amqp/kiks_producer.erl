@@ -5,6 +5,7 @@
 -behaviour(gen_server).
 
 -include_lib("amqp_client/include/amqp_client.hrl").
+-import(kiks_support, [b/1]).
 
 %% API
 -export([start_link/1,
@@ -26,7 +27,7 @@ start_link(Info) ->
     gen_server:start_link(?MODULE, Info, []).
 
 send(Pid, Payload, Topic) ->
-    gen_server:cast(Pid, {send, support:b(Payload), support:b(Topic)}).
+    gen_server:cast(Pid, {send, b(Payload), b(Topic)}).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks

@@ -2,7 +2,7 @@
 
 -include_lib("amqp_client/include/amqp_client.hrl").
 
--import(support, [b/1]).
+-import(kiks_support, [b/1]).
 
 -export([ensure_exchange/2,
 	 ensure_queue/2]).

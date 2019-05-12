@@ -3,8 +3,8 @@
 
 -include_lib("amqp_client/include/amqp_client.hrl").
 
--import(support, [get_config_as_string/2,
-		  get_config_as_binary/2]).
+-import(kiks_support, [get_config_as_string/2,
+		       get_config_as_binary/2]).
 
 -define(SERVER, ?MODULE).
 

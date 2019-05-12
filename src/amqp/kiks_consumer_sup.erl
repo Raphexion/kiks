@@ -1,6 +1,7 @@
 -module(kiks_consumer_sup).
 -behaviour(supervisor).
 -define(SERVER, ?MODULE).
+-import(kiks_support, [b/1]).
 
 -export([start_link/0,
 	 add_child/5,
@@ -15,9 +16,9 @@ add_child(Exchange, Queue, RoutingKey, Mod, Pid) ->
 
 add_child(Tag, Exchange, Queue, RoutingKey, Mod, Pid) ->
     Info = #{tag => Tag,
-	     exchange => support:b(Exchange),
-	     queue => support:b(Queue),
-	     routing_key => support:b(RoutingKey),
+	     exchange => b(Exchange),
+	     queue => b(Queue),
+	     routing_key => b(RoutingKey),
 	     mod => Mod,
 	     pid => Pid},
 

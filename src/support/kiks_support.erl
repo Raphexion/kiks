@@ -1,4 +1,4 @@
--module(support).
+-module(kiks_support).
 
 -export([b/1,
 	 get_config_as_string/2,

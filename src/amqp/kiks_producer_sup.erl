@@ -1,6 +1,7 @@
 -module(kiks_producer_sup).
 -behaviour(supervisor).
 -define(SERVER, ?MODULE).
+-import(kiks_support, [b/1]).
 
 -export([start_link/0]).
 -export([init/1,
@@ -10,7 +11,7 @@ start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 add_child(Exchange) ->
-    Opts = #{exchange => support:b(Exchange)},
+    Opts = #{exchange => b(Exchange)},
     supervisor:start_child(?MODULE, [Opts]).
 
 init(_) ->
