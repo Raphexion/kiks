@@ -1,6 +1,7 @@
 # kiks
 
 [![Build Status](https://travis-ci.org/Raphexion/kiks.svg?branch=master)](https://travis-ci.org/Raphexion/kiks)
+[![codecov.io](https://codecov.io/gh/Raphexion/kiks/coverage.svg?branch=master)](https://codecov.io/gh/Raphexion/kiks?branch=master)
 
 Small help library in Erlang to work with RabbitMQ.
 
