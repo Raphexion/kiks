@@ -5,13 +5,24 @@ services:
 
 otp_release:
   - 21.3
-  - 20.2
+  - 20.3
   - 19.3
 
 before_install:
   - docker run -d --rm -p 5672:5672 rabbitmq:3.7
 
+install:
+    pip install --user --disable-pip-version-check codecov
+
+before_script:
+  - sleep 5
+
 script:
   - rebar3 compile
-  - rebar3 eunit
-  - rebar3 proper
+  - rebar3 eunit --cover
+  - rebar3 proper --cover
+  - rebar3 ct --cover --readable=false
+  - rebar3 cover
+
+after_success:
+    codecov
