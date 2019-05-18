@@ -42,25 +42,7 @@ with_channel(Fun) ->
 
 %% @hidden
 init(_) ->
-    application:ensure_all_started(amqp_client),
-
-    %% note - must be binary
-    Username = get_config_as_binary(rabbitmq_username, "guest"),
-    Password = get_config_as_binary(rabbitmq_password, "guest"),
-
-    %% note - must be string
-    Hostname = get_config_as_string(rabbitmq_hostname, "localhost"),
-    Port = get_config_as_string(rabbitmq_port, "5672"),
-
-    PrivDir = code:priv_dir(kiks),
-    CaCert = filename:join(PrivDir, "cacert.pem"),
-
-    init_response(amqp_connection:start(#amqp_params_network{
-					   username = Username,
-					   password = Password,
-					   host = Hostname,
-					   port = list_to_integer(Port)
-					  })).
+    {ok, #state{}, 0}.
 
 %% @hidden
 handle_call(get, _From, S=#state{connection=Connection, channels=Channels}) ->
@@ -81,6 +63,24 @@ handle_cast(_What, State) ->
     {noreply, State}.
 
 %% @hidden
+handle_info(timeout, _State) ->
+    %% note - must be binary
+    Username = get_config_as_binary(rabbitmq_username, "guest"),
+    Password = get_config_as_binary(rabbitmq_password, "guest"),
+
+    %% note - must be string
+    Hostname = get_config_as_string(rabbitmq_hostname, "localhost"),
+    Port = get_config_as_string(rabbitmq_port, "5672"),
+
+    PrivDir = code:priv_dir(kiks),
+
+    init_response(amqp_connection:start(#amqp_params_network{
+					   username = Username,
+					   password = Password,
+					   host = Hostname,
+					   port = list_to_integer(Port)
+					  }));
+
 handle_info(_What, State) ->
     {noreply, State}.
 
@@ -100,11 +100,11 @@ code_change(_, _, State) ->
 
 init_response({ok, Connection}) ->
     {ok, Channel} = amqp_connection:open_channel(Connection),
-    {ok, #state{with_channel=Channel,
-		connection=Connection}};
+    {noreply, #state{with_channel=Channel,
+		     connection=Connection}};
 
 init_response(Error) ->
-    {stop, Error}.
+    {noreply, Error}.
 
 close_channels([]) ->
     ok;
