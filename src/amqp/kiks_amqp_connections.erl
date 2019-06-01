@@ -7,6 +7,7 @@
 		       get_config_as_binary/2]).
 
 -define(SERVER, ?MODULE).
+-define(RESTART_TIMEOUT, 5000).
 
 %% API
 -export([start_link/0,
@@ -64,6 +65,8 @@ handle_cast(_What, State) ->
 
 %% @hidden
 handle_info(timeout, _State) ->
+    lager:debug("attempt to connect to broker"),
+
     %% note - must be binary
     Username = get_config_as_binary(rabbitmq_username, "guest"),
     Password = get_config_as_binary(rabbitmq_password, "guest"),
@@ -99,12 +102,14 @@ code_change(_, _, State) ->
 %%------------------------------------------------------------------------------
 
 init_response({ok, Connection}) ->
+    lager:debug("connection established"),
     {ok, Channel} = amqp_connection:open_channel(Connection),
     {noreply, #state{with_channel=Channel,
 		     connection=Connection}};
 
 init_response(Error) ->
-    {noreply, Error}.
+    lager:warning("connection attempt failed"),
+    {noreply, Error, ?RESTART_TIMEOUT}.
 
 close_channels([]) ->
     ok;
