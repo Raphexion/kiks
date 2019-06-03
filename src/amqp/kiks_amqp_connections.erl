@@ -75,8 +75,6 @@ handle_info(timeout, _State) ->
     Hostname = get_config_as_string(rabbitmq_hostname, "localhost"),
     Port = get_config_as_string(rabbitmq_port, "5672"),
 
-    PrivDir = code:priv_dir(kiks),
-
     init_response(amqp_connection:start(#amqp_params_network{
 					   username = Username,
 					   password = Password,
