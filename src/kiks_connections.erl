@@ -22,7 +22,7 @@
 	 terminate/2,
 	 code_change/3]).
 
--record(state, {connection, with_channel, channels=[]}).
+-record(state, {connection=none, with_channel=none, channels=[]}).
 
 %%------------------------------------------------------------------------------
 %% API
@@ -43,6 +43,7 @@ with_channel(Fun) ->
 
 %% @hidden
 init(_) ->
+    lager:debug("kiks connections init"),
     {ok, #state{}, 0}.
 
 %% @hidden
@@ -60,7 +61,8 @@ handle_call({with_channel, Fun}, _From, S=#state{with_channel=Channel}) ->
 	    end,
     {reply, Reply, S}.
 
-handle_cast(_What, State) ->
+handle_cast(What, State) ->
+    lager:warning("kiks connections cast unhandle ~p", [What]),
     {noreply, State}.
 
 %% @hidden
@@ -82,11 +84,19 @@ handle_info(timeout, _State) ->
 					   port = list_to_integer(Port)
 					  }));
 
-handle_info(_What, State) ->
+handle_info({'DOWN', _ref, process, _pid, _info}, State) ->
+    lager:warning("lost connection to broker. restarting"),
+    {stop, lost_connection, State};
+
+handle_info(What, State) ->
+    lager:warning("kiks connections info unhandle ~p", [What]),
     {noreply, State}.
 
 %% @hidden
+terminate(lost_connection, _State) ->
+    ok;
 terminate(_Reason, #state{connection=Connection, channels=Channels}) ->
+    lager:debug("kiks connections terminate"),
     close_channels(Channels),
     close_connection(Connection),
     ok.
@@ -101,6 +111,7 @@ code_change(_, _, State) ->
 
 init_response({ok, Connection}) ->
     lager:debug("connection established"),
+    erlang:monitor(process, Connection),
     {ok, Channel} = amqp_connection:open_channel(Connection),
     {noreply, #state{with_channel=Channel,
 		     connection=Connection}};
@@ -115,5 +126,7 @@ close_channels([Channel|Channels]) ->
     amqp_channel:close(Channel),
     close_channels(Channels).
 
+close_connection(none) ->
+    ok;
 close_connection(Connection) ->
     amqp_connection:close(Connection).
