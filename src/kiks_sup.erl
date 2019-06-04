@@ -10,8 +10,8 @@ start_link() ->
     supervisor:start_link(?MODULE, []).
 
 init(_Args) ->
-    SupFlags = #{strategy => one_for_one,
-                 intensity => 0,
+    SupFlags = #{strategy => one_for_all,
+                 intensity => 1,
                  period => 1},
 
     Connections = #{id => kiks_connections,
