@@ -1,4 +1,4 @@
--module(kiks_amqp_connections).
+-module(kiks_connections).
 -behaviour(gen_server).
 
 -include_lib("amqp_client/include/amqp_client.hrl").

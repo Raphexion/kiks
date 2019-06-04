@@ -33,7 +33,7 @@ init(Info) ->
       queue := Queue,
       routing_key := RoutingKey} = Info,
 
-    {ok, Channel} = kiks_amqp_connections:get(),
+    {ok, Channel} = kiks_connections:get(),
 
     kiks_common:ensure_exchange(Channel, Exchange),
     kiks_common:ensure_queue(Channel, Queue),

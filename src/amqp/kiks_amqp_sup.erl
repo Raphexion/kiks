@@ -14,8 +14,8 @@ init(_Args) ->
                  intensity => 0,
                  period => 1},
 
-    Connections = #{id => kiks_amqp_connections,
-                    start => {kiks_amqp_connections, start_link, []},
+    Connections = #{id => kiks_connections,
+                    start => {kiks_connections, start_link, []},
                     shutdown => brutal_kill,
 		    type => worker},
 

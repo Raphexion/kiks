@@ -35,7 +35,7 @@ send(Pid, Payload, Topic) ->
 
 %% @hidden
 init(Info=#{exchange := Exchange}) ->
-    {ok, Channel} = kiks_amqp_connections:get(),
+    {ok, Channel} = kiks_connections:get(),
     kiks_common:ensure_exchange(Channel, Exchange),
 
     {ok, Info#{channel => Channel}}.
