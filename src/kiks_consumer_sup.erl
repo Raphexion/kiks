@@ -14,7 +14,7 @@ start_link() ->
 add_child(Exchange, Queue, RoutingKey, Mod, Pid) ->
     add_child(no_tag, Exchange, Queue, RoutingKey, Mod, Pid).
 
-add_child(Tag, Exchange, Queue, RoutingKey, Mod, Pid) ->
+add_child(Tag, Exchange, Queue, RoutingKey, Mod, Pid) when is_pid(Pid) ->
     Info = #{tag => Tag,
 	     exchange => b(Exchange),
 	     queue => b(Queue),
