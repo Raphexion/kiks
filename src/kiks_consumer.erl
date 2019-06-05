@@ -109,7 +109,11 @@ process(send, T, Pid, Payload, Key) ->
 	    error
     end;
 process(Mod, T, Pid, Payload, Key) ->
-    case Mod:process(T, Pid, Payload, Key) of
-	ok -> ok;
-	_ -> error
+    try
+	case Mod:process(T, Pid, Payload, Key) of
+	    ok -> ok;
+	    _ -> error
+	end
+    catch
+	_:_ -> error
     end.
